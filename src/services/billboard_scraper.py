@@ -18,54 +18,40 @@ class BillboardScraper:
         self.headless = headless  # Store the headless mode preference
         logging.info(f"Initialized BillboardScraper with headless={self.headless}")
 
-    def _scrape_hot_100(self, date: str) -> List[Dict[str, str]]:
-        """Scrapes the Billboard Hot 100 for a specific date."""
-        url = f"{self.base_url}/{date}"
-        logging.info(f"Starting to scrape Billboard Hot 100 for {date} at {url}")
+    def _scrape_hot_100(self, url: str) -> List[Dict[str, str]]:
+        """Scrapes the Billboard Hot 100 for a specific date or the latest chart."""
+
+        logging.info(f"Starting to scrape Billboard Hot 100 from {url}")
 
         with sync_playwright() as p:
-            # Launch the browser, using the headless parameter from the constructor
             browser = p.chromium.launch(headless=self.headless)
             logging.info("Browser launched")
 
             page = browser.new_page()
-
-            # Navigate to the Billboard chart URL with longer timeout and wait for DOM content
             logging.info(f"Navigating to URL: {url}")
-            page.goto(url, wait_until="domcontentloaded", timeout=60000)  # Wait for DOM content
+            page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
-            # Increase timeout and target the correct selector
+            # Wait for the chart rows to load
             logging.info("Waiting for the chart rows to load")
-            try:
-                page.wait_for_selector("ul.o-chart-results-list-row", timeout=60000)  # Wait up to 60 seconds
-            except Exception as e:
-                logging.error("Failed to load chart list", exc_info=e)
-                page.screenshot(path="error_screenshot.png")  # Take a screenshot to debug
-                raise e
+            page.wait_for_selector("ul.o-chart-results-list-row", timeout=60000)
 
-            # Select and scrape song titles and artists from the chart
-            logging.info("Extracting song titles and artists")
+            # Extract song titles and artists
             chart_items = page.query_selector_all("ul.o-chart-results-list-row")
             songs = []
             for idx, item in enumerate(chart_items, start=1):
                 # Extract song title
                 title_element = item.query_selector("h3.c-title")
-                if title_element:
-                    title = title_element.inner_text().strip()
-                else:
-                    logging.warning(f"Title element not found for item #{idx}. Skipping.")
-                    continue  # Skip this entry if title is missing
+                title = title_element.inner_text().strip() if title_element else "Unknown Title"
 
-                # Extract artist
-                artist_element = item.query_selector("span.c-label")
+                # Extract artist using the refined selector
+                artist_element = item.query_selector("span.c-label.a-no-trucate.a-font-primary-s")
                 artist = artist_element.inner_text().strip() if artist_element else "Unknown Artist"
-                
+
                 songs.append({"title": title, "artist": artist})
                 logging.info(f"Extracted #{idx}: {title} by {artist}")
 
             logging.info(f"Successfully scraped {len(songs)} songs from the chart")
             browser.close()
-            logging.info("Browser closed")
 
         return songs
 
