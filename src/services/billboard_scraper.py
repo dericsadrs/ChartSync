@@ -79,15 +79,16 @@ class BillboardScraper:
         logging.info(f"Fetching Billboard Hot 100 for {date}")
         return self._scrape_hot_100(date)
 
-    def get_hot_100_today(self) -> List[Dict[str, str]]:
+    def get_latest_hot_100(self) -> List[Dict[str, str]]:
         """
-        Get the Billboard Hot 100 chart for today.
-
+        Get the latest available Billboard Hot 100 chart.
+        
         :return: A list of dictionaries containing song titles and artists.
         """
-        today = datetime.today().strftime('%Y-%m-%d')
-        logging.info(f"Fetching Billboard Hot 100 for today ({today})")
-        return self._scrape_hot_100(today)
+        url = "https://www.billboard.com/charts/hot-100/"
+        
+        logging.info(f"Fetching the most recent Billboard Hot 100 chart from {url}")
+        return self._scrape_hot_100(url)
 
     def display_songs(self, songs: List[Dict[str, str]]) -> None:
         """
