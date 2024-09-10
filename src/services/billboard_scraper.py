@@ -71,10 +71,9 @@ class BillboardScraper:
         
         :return: A list of dictionaries containing song titles and artists.
         """
-        url = "https://www.billboard.com/charts/hot-100/"
-        
-        logging.info(f"Fetching the most recent Billboard Hot 100 chart from {url}")
-        return self._scrape_hot_100(url)
+    
+        logging.info(f"Fetching the most recent Billboard Hot 100 chart from {self.base_url}")
+        return self._scrape_hot_100(self.base_url)
 
     def display_songs(self, songs: List[Dict[str, str]]) -> None:
         """
