@@ -1,43 +1,50 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-from src.config import Config
+from config import Config
 import logging
 
 class SpotifyPlaylistMaker():
 
-    def __init__(self, SpotifyOAuth, ):
+    def __init__(self):
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self.config = Config()
-        
+        self.authenticate()
+    
     def authenticate(self):
-        try:
-            logging("Authenticating.....")
-            self.sp = spotipy.Spotify(client_id=self.config.get_client_id(), 
+        """
+        Authenticate account to Spotify using 2.0 authentication
+        """
+        self.sp = spotipy.Spotify(
+                                    auth_manager=SpotifyOAuth(
+                                    client_id=self.config.get_client_id(), 
                                     client_secret=self.config.get_client_secret(), 
                                     redirect_uri=self.config.get_redirect_uri(),
-                                    scope='playlist-modify-public')
-            logging("Authencation complete")
-        except Exception as e:
-            print("Error occurred while authenticating:", e)
+                                    scope='playlist-modify-public'))
     
-    def create_playlist(self):
-        pass
-    def add_tracks_to_playlist(self):
-        pass
-    def search_song(self):
-        pass
-    def display(self):
-        pass    
+    def create_playlist(self, user_id: str, playlist_name: str, description: str) -> str:
+        """
+        Create a Spotify playlist and return its ID.
+        """
+        playlist = self.sp.user_playlist_create(user=user_id, name=playlist_name, public=True, description=description)
+        logging.info(f"Created playlist '{playlist_name}' with ID {playlist['id']}")
+        return playlist['id']
 
+    def add_tracks_to_playlist(self, playlist_id: str, track_uris: list):
+        """
+        Add a list of tracks Spotify Url's to the playlist.
+        """
+        self.sp.playlist_add_items(playlist_id, track_uris)
+        logging.info(f"Added {len(track_uris)} tracks to the playlist with ID {playlist_id}.")
+
+    def search_song(self, artist: str, track: str) -> str:
+        """
+        Search Spotify for a track by its artist and title.
+        Returns the Spotify URI for the first match found.
+        """
+        query = f"artist:{artist} track:{track}"
+        result = self.sp.search(q=query, type='track', limit=1)
+        if result['tracks']['items']:
+            return result['tracks']['items'][0]['uri']
+        logging.info(f"No match found for {artist} - {track}")
+        return None
     
-# import spotipy
-# from spotipy.oauth2 import SpotifyOAuth
-
-# scope = "user-library-read"
-
-# sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
-
-# results = sp.current_user_saved_tracks()
-# for idx, item in enumerate(results['items']):
-#     track = item['track']
-#     print(idx, track['artists'][0]['name'], " – ", track['name'])
