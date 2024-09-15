@@ -1,61 +1,51 @@
+import openai
 import json
-import re
-import openai  # Assuming you're using OpenAI's GPT API
-from services.spotify_operations.spotify_playlist_maker import SpotifyPlaylistMaker
-from model.song import Song
-from model.songs import Songs
+import logging
 from config import Config
 
-class GPTOperations():
+class GPTOperations:
     def __init__(self):
-        self.spotify = SpotifyPlaylistMaker()
-        self.gpt_key = Config.get_gpt_key()  # Load GPT key
-        openai.api_key = self.gpt_key  # Set the API key for OpenAI
+        self.config = Config()
+        self.api_key = self.config.get_gpt_key()
+        self.model = self.config.get_gpt_model()  # Assuming you add this to your Config class
+        openai.api_key = self.api_key
 
-    def fetch_songs(self, prompt: str) -> str:
+    def fetch_songs(self, prompt: str) -> dict:
         """
-        Fetch songs based on the user's prompt and return a JSON response with the artist and song.
+        Fetch songs based on the user's prompt using the specified GPT model.
+        Returns a JSON response with the artist and song.
         """
-        # Extract artist name from the prompt
-        artist = self.extract_artist(prompt)
-        if not artist:
-            return json.dumps({"error": "Artist not found in prompt"})
+        try:
+            response = openai.Completion.create(
+                model=self.model,
+                prompt=prompt,
+                max_tokens=100,
+                n=1,
+                stop=None,
+                temperature=0.7
+            )
+            songs = self._parse_response(response.choices[0].text)
+            return {"status": "success", "data": songs}
+        except Exception as e:
+            logging.error(f"Error fetching songs: {e}")
+            return {"status": "error", "message": str(e)}
 
-        # Search for top tracks of the artist
-        top_tracks = self.get_top_tracks(artist)
-        if not top_tracks:
-            return json.dumps({"error": f"No top tracks found for {artist}"})
+    def _parse_response(self, response_text: str) -> list:
+        """
+        Parse the GPT response text to extract song information.
+        """
+        # This is a simple example. You might need to adjust the parsing logic based on the response format.
+        lines = response_text.strip().split('\n')
+        songs = []
+        for line in lines:
+            if '-' in line:
+                artist, song = line.split('-', 1)
+                songs.append({"artist": artist.strip(), "song": song.strip()})
+        return songs
 
-        # Prepare Song instances and use Songs class to create JSON response
-        songs_list = [Song(track['name'], artist) for track in top_tracks]
-        songs = Songs(songs_list)
-        return songs.to_json()  # This will return the JSON structure as required
-
-    def extract_artist(self, prompt: str) -> str:
-        """
-        Extract artist name from the prompt using regex.
-        """
-        match = re.search(r"(?i)(?:give me|top songs|songs|tracks|by)\s+([a-zA-Z\s-]+)", prompt)
-        if match:
-            return match.group(1).strip()
-        return None
-
-    def get_top_tracks(self, artist: str) -> list:
-        """
-        Get top tracks of the artist from Spotify.
-        """
-        result = self.spotify.sp.search(q=f"artist:{artist}", type='track', limit=10)
-        if result['tracks']['items']:
-            return result['tracks']['items']
-        return []
-
-    def generate_response(self, prompt: str) -> str:
-        """
-        Use the GPT agent to generate a response based on the prompt.
-        """
-        response = openai.ChatCompletion.create(
-            model="gpt-4",  # Specify the model you want to use
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response['choices'][0]['message']['content']
-
+# Example usage
+if __name__ == "__main__":
+    gpt_operations = GPTOperations()
+    prompt = "Give me Ed-Sheeran's top songs"
+    result = gpt_operations.fetch_songs(prompt)
+    print(json.dumps(result, indent=2))
