@@ -43,9 +43,9 @@ class GPTOperations:
                 songs.append({"artist": artist.strip(), "song": song.strip()})
         return songs
 
-# Example usage
-if __name__ == "__main__":
-    gpt_operations = GPTOperations()
-    prompt = "Give me Ed-Sheeran's top songs"
-    result = gpt_operations.fetch_songs(prompt)
-    print(json.dumps(result, indent=2))
+# # Example usage
+# if __name__ == "__main__":
+#     gpt_operations = GPTOperations()
+#     prompt = "Give me Ed-Sheeran's top songs"
+#     result = gpt_operations.fetch_songs(prompt)
+#     print(json.dumps(result, indent=2))
