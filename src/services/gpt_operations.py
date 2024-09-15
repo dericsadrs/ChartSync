@@ -1,49 +1,51 @@
+import openai
 import json
-import re
-from src.services.spotify_playlist_maker import SpotifyPlaylistMaker
+import logging
+from config import Config
 
-class GPTOperations():
+class GPTOperations:
     def __init__(self):
-        self.spotify = SpotifyPlaylistMaker()
+        self.config = Config()
+        self.api_key = self.config.get_gpt_key()
+        self.model = self.config.get_gpt_model()  # Assuming you add this to your Config class
+        openai.api_key = self.api_key
 
-    def fetch_songs(self, prompt: str) -> str:
+    def fetch_songs(self, prompt: str) -> dict:
         """
-        Fetch songs based on the user's prompt and return a JSON response with the artist and song.
+        Fetch songs based on the user's prompt using the specified GPT model.
+        Returns a JSON response with the artist and song.
         """
-        # Extract artist name from the prompt
-        artist = self.extract_artist(prompt)
-        if not artist:
-            return json.dumps({"error": "Artist not found in prompt"})
+        try:
+            response = openai.Completion.create(
+                model=self.model,
+                prompt=prompt,
+                max_tokens=100,
+                n=1,
+                stop=None,
+                temperature=0.7
+            )
+            songs = self._parse_response(response.choices[0].text)
+            return {"status": "success", "data": songs}
+        except Exception as e:
+            logging.error(f"Error fetching songs: {e}")
+            return {"status": "error", "message": str(e)}
 
-        # Search for top tracks of the artist
-        top_tracks = self.get_top_tracks(artist)
-        if not top_tracks:
-            return json.dumps({"error": f"No top tracks found for {artist}"})
-
-        # Prepare JSON response
-        response = [{"artist": artist, "song": track['name']} for track in top_tracks]
-        return json.dumps(response)
-
-    def extract_artist(self, prompt: str) -> str:
+    def _parse_response(self, response_text: str) -> list:
         """
-        Extract artist name from the prompt using regex.
+        Parse the GPT response text to extract song information.
         """
-        match = re.search(r"(?i)(?:give me|top songs|songs|tracks|by)\s+([a-zA-Z\s-]+)", prompt)
-        if match:
-            return match.group(1).strip()
-        return None
+        # This is a simple example. You might need to adjust the parsing logic based on the response format.
+        lines = response_text.strip().split('\n')
+        songs = []
+        for line in lines:
+            if '-' in line:
+                artist, song = line.split('-', 1)
+                songs.append({"artist": artist.strip(), "song": song.strip()})
+        return songs
 
-    def get_top_tracks(self, artist: str) -> list:
-        """
-        Get top tracks of the artist from Spotify.
-        """
-        result = self.spotify.sp.search(q=f"artist:{artist}", type='track', limit=10)
-        if result['tracks']['items']:
-            return result['tracks']['items']
-        return []
-
-# # Example usage
-# if __name__ == "__main__":
-#     gpt_ops = GPTOperations()
-#     prompt = "Give me Ed Sheeran's top songs"
-#     print(gpt_ops.fetch_songs(prompt))
+# Example usage
+if __name__ == "__main__":
+    gpt_operations = GPTOperations()
+    prompt = "Give me Ed-Sheeran's top songs"
+    result = gpt_operations.fetch_songs(prompt)
+    print(json.dumps(result, indent=2))
