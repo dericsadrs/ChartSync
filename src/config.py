@@ -25,7 +25,7 @@ class Config:
         self.SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
         self.SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
         self.SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
-
+        self.GPT_KEY = os.getenv('GPT_KEY')
         # Log if the environment variables are loaded correctly
         self._log_variables()
 
@@ -45,6 +45,11 @@ class Config:
             logging.info("SPOTIPY_REDIRECT_URI is set.")
         else:
             logging.warning("SPOTIPY_REDIRECT_URI is missing.")
+        
+        if self.GPT_KEY:
+            logging.info("GPT_KEY is set.")
+        else:
+            logging.warning("GPT_KEY is missing.")
 
     def get_client_id(self) -> str:
         """Returns the Spotify Client ID."""
@@ -57,3 +62,7 @@ class Config:
     def get_redirect_uri(self) -> str:
         """Returns the Spotify Redirect URI."""
         return self.SPOTIPY_REDIRECT_URI
+    
+    def get_gpt_key(self) -> str:
+        """Returns the Spotify Redirect URI."""
+        return self.GPT_KEY
