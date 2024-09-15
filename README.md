@@ -1,7 +1,3 @@
-Here's a detailed README for your project **Spotify Playlist Maker**:
-
----
-
 # Spotify Playlist Maker
 
 ## Overview
@@ -84,6 +80,13 @@ Handles Spotify API interactions including authentication, playlist creation, an
 ### `PlaylistManager` (playlist_manager.py)
 Coordinates between BillboardScraper and SpotifyPlaylistMaker.
 - `create_billboard_playlist`: Scrapes Billboard Top 100 songs, searches for them on Spotify, and creates a playlist with those tracks.
+
+## Example Playlist
+
+Here is an example playlist created using the Spotify Playlist Maker, which automatically gathers songs from Billboard's Top 100:
+![Screenshot 2024-09-15 at 11 09 53 AM](https://github.com/user-attachments/assets/c5bce71d-07e3-41a9-bf79-c56671493086)
+
+This playlist contains 85 songs, totaling approximately 4 hours and 27 minutes of music, and was generated entirely by scraping Billboard's latest Top 100 songs.
 
 ## How to Use
 
