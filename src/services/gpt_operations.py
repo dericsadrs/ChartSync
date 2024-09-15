@@ -1,6 +1,6 @@
 import json
 import re
-from src.services.spotify_playlist_maker import SpotifyPlaylistMaker
+from services.spotify_playlist_maker import SpotifyPlaylistMaker
 
 class GPTOperations():
     def __init__(self):
@@ -42,8 +42,3 @@ class GPTOperations():
             return result['tracks']['items']
         return []
 
-# # Example usage
-# if __name__ == "__main__":
-#     gpt_ops = GPTOperations()
-#     prompt = "Give me Ed Sheeran's top songs"
-#     print(gpt_ops.fetch_songs(prompt))
