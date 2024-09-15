@@ -26,7 +26,7 @@ class Config:
         self.SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
         self.SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
         self.GPT_KEY = os.getenv('GPT_KEY')
-        # Log if the environment variables are loaded correctly
+        self.GPT_MODEL = os.getenv('GPT_MODEL', 'gpt-4o-mini')
         self._log_variables()
 
     def _log_variables(self) -> None:
@@ -50,6 +50,11 @@ class Config:
             logging.info("GPT_KEY is set.")
         else:
             logging.warning("GPT_KEY is missing.")
+        
+        if self.GPT_MODEL:
+            logging.info("GPT_MODEL is set.")
+        else:
+            logging.warning("GPT_MODEL is missing.")
 
     def get_client_id(self) -> str:
         """Returns the Spotify Client ID."""
@@ -66,3 +71,7 @@ class Config:
     def get_gpt_key(self) -> str:
         """Returns the Spotify Redirect URI."""
         return self.GPT_KEY
+    
+    def get_gpt_model(self) -> str:
+        """Returns the GPT model."""
+        return self.GPT_MODEL
