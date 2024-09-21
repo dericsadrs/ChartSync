@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 
 # Set up basic logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+ 
 class BillboardScraper:
     def __init__(self, headless: bool = True):
         """
@@ -23,37 +23,42 @@ class BillboardScraper:
 
         logging.info(f"Starting to scrape Billboard Hot 100 from {url}")
 
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=self.headless)
-            logging.info("Browser launched")
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=self.headless)
+                logging.info("Browser launched")
 
-            page = browser.new_page()
-            logging.info(f"Navigating to URL: {url}")
-            page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                page = browser.new_page()
+                logging.info(f"Navigating to URL: {url}")
+                page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
-            # Wait for the chart rows to load
-            logging.info("Waiting for the chart rows to load")
-            page.wait_for_selector("ul.o-chart-results-list-row", timeout=60000)
+                # Wait for the chart rows to load
+                logging.info("Waiting for the chart rows to load")
+                page.wait_for_selector("ul.o-chart-results-list-row", timeout=60000)
 
-            # Extract song titles and artists
-            chart_items = page.query_selector_all("ul.o-chart-results-list-row")
-            songs = []
-            for idx, item in enumerate(chart_items, start=1):
-                # Extract song title
-                title_element = item.query_selector("h3.c-title")
-                title = title_element.inner_text().strip() if title_element else "Unknown Title"
+                # Extract song titles and artists
+                chart_items = page.query_selector_all("ul.o-chart-results-list-row")
+                songs = []
+                for idx, item in enumerate(chart_items, start=1):
+                    # Extract song title
+                    title_element = item.query_selector("h3.c-title")
+                    title = title_element.inner_text().strip() if title_element else "Unknown Title"
 
-                # Extract artist using the refined selector
-                artist_element = item.query_selector("span.c-label.a-no-trucate.a-font-primary-s")
-                artist = artist_element.inner_text().strip() if artist_element else "Unknown Artist"
+                    # Extract artist using the refined selector
+                    artist_element = item.query_selector("span.c-label.a-no-trucate.a-font-primary-s")
+                    artist = artist_element.inner_text().strip() if artist_element else "Unknown Artist"
 
-                songs.append({"title": title, "artist": artist})
-                logging.info(f"Extracted #{idx}: {title} by {artist}")
+                    songs.append({"title": title, "artist": artist})
+                    logging.info(f"Extracted #{idx}: {title} by {artist}")
 
-            logging.info(f"Successfully scraped {len(songs)} songs from the chart")
-            browser.close()
+                logging.info(f"Successfully scraped {len(songs)} songs from the chart")
+                browser.close()
 
-        return songs
+            return songs
+
+        except Exception as e:
+            logging.error(f"An error occurred while scraping Billboard Hot 100: {e}")
+            return []
 
     def get_hot_100_by_date(self, date: str) -> List[Dict[str, str]]:
         """
