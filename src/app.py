@@ -1,5 +1,5 @@
 
-from services.palylist_manager import PlaylistManager
+from services.playlist_manager import PlaylistManager
 
 if __name__ == "__main__":
     manager = PlaylistManager()
