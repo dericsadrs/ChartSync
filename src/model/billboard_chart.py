@@ -1,5 +1,6 @@
 from typing import List
 import json
+from model.song import Song
 
 class BillboardChart:
     def __init__(self, songs: List[Song]):

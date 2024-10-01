@@ -2,6 +2,8 @@ import json
 import logging
 from datetime import datetime
 from typing import List, Dict
+from model.song import Song
+from model.billboard_chart import BillboardChart
 from playwright.sync_api import sync_playwright
 
 # Set up basic logging configuration
@@ -48,17 +50,17 @@ class BillboardScraper:
                     artist_element = item.query_selector("span.c-label.a-no-trucate.a-font-primary-s")
                     artist = artist_element.inner_text().strip() if artist_element else "Unknown Artist"
 
-                    songs.append({"title": title, "artist": artist})
+                    songs.append(Song(title, artist))
                     logging.info(f"Extracted #{idx}: {title} by {artist}")
 
                 logging.info(f"Successfully scraped {len(songs)} songs from the chart")
                 browser.close()
 
-            return songs
+            return BillboardChart(songs)
 
         except Exception as e:
             logging.error(f"An error occurred while scraping Billboard Hot 100: {e}")
-            return []
+            return BillboardChart([])
 
     def get_hot_100_by_date(self, date: str) -> List[Dict[str, str]]:
         """

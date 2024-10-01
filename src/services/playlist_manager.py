@@ -21,12 +21,12 @@ class PlaylistManager:
 
             if date:
                 logging.info(f"Fetching Billboard Hot 100 for {date}")
-                hot_100_songs = self.billboard_scraper.get_hot_100_by_date(date)
+                hot_100_chart = self.billboard_scraper.get_hot_100_by_date(date)
             else:
                 logging.info("Fetching the latest Billboard Hot 100 chart")
-                hot_100_songs = self.billboard_scraper.get_latest_hot_100()
+                hot_100_chart = self.billboard_scraper.get_latest_hot_100()
 
-            if not hot_100_songs:
+            if not hot_100_chart.songs:
                 logging.error("No songs found in the Billboard Hot 100 chart.")
                 return
 
@@ -42,8 +42,8 @@ class PlaylistManager:
 
             # Search and collect Spotify URIs for the Billboard Hot 100 songs
             track_uris = []
-            for song in hot_100_songs:
-                uri = self.spotify_maker.search_song(artist=song['artist'], track=song['title'])
+            for song in hot_100_chart.songs:
+                uri = self.spotify_maker.search_song(artist=song.artist, track=song.title)
                 if uri:
                     track_uris.append(uri)
 
