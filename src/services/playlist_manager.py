@@ -1,6 +1,6 @@
 import logging
-from services.billboard_scraper import BillboardScraper
-from services.spotify_playlist_maker import SpotifyPlaylistMaker
+from services.scraping.billboard.billboard_scraper import BillboardScraper
+from services.spotify_operations.spotify_playlist_maker import SpotifyPlaylistMaker
 import re  # Add this import for regex validation
 
 class PlaylistManager:

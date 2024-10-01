@@ -1,6 +1,6 @@
 import json
 import re
-from services.spotify_playlist_maker import SpotifyPlaylistMaker
+from services.spotify_operations.spotify_playlist_maker import SpotifyPlaylistMaker
 
 class GPTOperations():
     def __init__(self):
