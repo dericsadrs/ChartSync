@@ -1,6 +1,7 @@
 import logging
 from services.scraping.billboard.billboard_scraper import BillboardScraper
 from services.spotify_operations.spotify_playlist_maker import SpotifyPlaylistMaker
+from services.scraping.billboard.billboard_tiktok_scraper import BillboardTikTokScraper
 import re  # Add this import for regex validation
 
 class PlaylistManager:
@@ -8,7 +9,7 @@ class PlaylistManager:
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self.billboard_scraper = BillboardScraper(headless=True)
         self.spotify_maker = SpotifyPlaylistMaker()
-
+        self.tiktok_scraper = BillboardTikTokScraper()
     def create_billboard_playlist(self, date: str = None):
         """
         Create a Spotify playlist with the Billboard Hot 100 songs.
@@ -56,3 +57,10 @@ class PlaylistManager:
         except Exception as e:
             logging.error(f"An error occurred: {e}")
 
+    def create_tiktok_playlist(self):
+        """
+        Create a Spotify playlist with the TikTok Billboard Top 50 songs.
+        """
+        pass
+        tiktok_top_50 = self.tiktok_scraper.get_top_50()
+        logging.info(f"TikTok Billboard Top 50: {tiktok_top_50}")

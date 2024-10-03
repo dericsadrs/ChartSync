@@ -3,4 +3,5 @@ from services.playlist_manager import PlaylistManager
 
 if __name__ == "__main__":
     manager = PlaylistManager()
-    manager.create_billboard_playlist()
+    # manager.create_billboard_playlist()
+    manager.create_tiktok_playlist()
