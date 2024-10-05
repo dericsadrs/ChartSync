@@ -9,10 +9,10 @@ from music_chart_scraper_config import MUSIC_CHART_SCRAPER_CONFIG  # Assuming Ch
 class Scraper:
     def __init__(self, headless: bool = True, chart_type: str = "billboard_hot_100"):
         """
-        Initialize the BillboardScraper class.
+        Initialize the Scraper class.
 
         :param headless: Whether to run the browser in headless mode (default True).
-        :param chart_type: The type of Billboard chart to scrape (default 'billboard_hot_100').
+        :param chart_type: The type of chart to scrape (default 'billboard_hot_100').
         """
         self.chart_type = chart_type
         self.config = MUSIC_CHART_SCRAPER_CONFIG.get(chart_type)
@@ -25,12 +25,12 @@ class Scraper:
         self.tags = ChartTags(tags["chart_item"], tags["title"], tags["artist"])
         self.base_url = self.config['url']
         self.headless = headless
-        logging.info(f"Initialized BillboardScraper with headless={self.headless} and chart_type={self.chart_type}")
+        logging.info(f"Initialized Scraper with headless={self.headless} and chart_type={self.chart_type}")
 
     def _scrape_chart(self, url: str) -> Songs:
-        """Scrapes the configured Billboard chart for the latest songs."""
+        """Scrapes the configured chart for the latest songs."""
 
-        logging.info(f"Starting to scrape Billboard chart from {url}")
+        logging.info(f"Starting to scrape chart from {url}")
 
         try:
             with sync_playwright() as p:
@@ -71,16 +71,16 @@ class Scraper:
 
     def get_latest_chart(self) -> Songs:
         """
-        Get the latest available Billboard chart.
+        Get the latest available chart.
 
         :return: A Songs object containing a list of Song objects.
         """
-        logging.info(f"Fetching the most recent Billboard chart from {self.base_url}")
+        logging.info(f"Fetching the most recent  chart from {self.base_url}")
         return self._scrape_chart(self.base_url)
 
     def display_songs(self, songs: Songs) -> None:
         """
-        Display the fetched Billboard songs in a human-readable format.
+        Display the fetched  songs in a human-readable format.
 
         :param songs: A Songs object containing a list of Song objects.
         """
