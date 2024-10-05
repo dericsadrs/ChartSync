@@ -2,7 +2,7 @@ from typing import List
 import json
 from model.song import Song
 
-class BillboardChart:
+class Songs:
     def __init__(self, songs: List[Song]):
         self.songs = songs
 
