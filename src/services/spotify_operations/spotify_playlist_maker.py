@@ -33,18 +33,24 @@ class SpotifyPlaylistMaker():
         """
         Add a list of tracks Spotify Url's to the playlist.
         """
-        self.sp.playlist_add_items(playlist_id, track_uris)
-        logging.info(f"Added {len(track_uris)} tracks to the playlist with ID {playlist_id}.")
+        try:
+            self.sp.playlist_add_items(playlist_id, track_uris)
+            logging.info(f"Added {len(track_uris)} tracks to the playlist with ID {playlist_id}.")
+        except Exception as e:
+            logging.error(f"Failed to add tracks to playlist {playlist_id}: {e}")
 
     def search_song(self, artist: str, track: str) -> str:
         """
         Search Spotify for a track by its artist and title.
         Returns the Spotify URI for the first match found.
         """
-        query = f"artist:{artist} track:{track}"
-        result = self.sp.search(q=query, type='track', limit=1)
-        if result['tracks']['items']:
-            return result['tracks']['items'][0]['uri']
-        logging.info(f"No match found for {artist} - {track}")
-        return None
-    
+        try:
+            query = f"artist:{artist} track:{track}"
+            result = self.sp.search(q=query, type='track', limit=1)
+            if result['tracks']['items']:
+                return result['tracks']['items'][0]['uri']
+            logging.info(f"No match found for {artist} - {track}")
+            return None
+        except Exception as e:
+            logging.error(f"Error searching for track '{track}' by artist '{artist}': {e}")
+            return None

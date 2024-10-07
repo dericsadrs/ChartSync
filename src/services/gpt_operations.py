@@ -1,10 +1,16 @@
 import json
 import re
+import openai  # Assuming you're using OpenAI's GPT API
 from services.spotify_operations.spotify_playlist_maker import SpotifyPlaylistMaker
+from model.song import Song
+from model.songs import Songs
+from config import Config
 
 class GPTOperations():
     def __init__(self):
         self.spotify = SpotifyPlaylistMaker()
+        self.gpt_key = Config.get_gpt_key()  # Load GPT key
+        openai.api_key = self.gpt_key  # Set the API key for OpenAI
 
     def fetch_songs(self, prompt: str) -> str:
         """
@@ -20,9 +26,10 @@ class GPTOperations():
         if not top_tracks:
             return json.dumps({"error": f"No top tracks found for {artist}"})
 
-        # Prepare JSON response
-        response = [{"artist": artist, "song": track['name']} for track in top_tracks]
-        return json.dumps(response)
+        # Prepare Song instances and use Songs class to create JSON response
+        songs_list = [Song(track['name'], artist) for track in top_tracks]
+        songs = Songs(songs_list)
+        return songs.to_json()  # This will return the JSON structure as required
 
     def extract_artist(self, prompt: str) -> str:
         """
@@ -41,4 +48,14 @@ class GPTOperations():
         if result['tracks']['items']:
             return result['tracks']['items']
         return []
+
+    def generate_response(self, prompt: str) -> str:
+        """
+        Use the GPT agent to generate a response based on the prompt.
+        """
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # Specify the model you want to use
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response['choices'][0]['message']['content']
 
