@@ -1,7 +1,7 @@
 import logging
 from flask import Flask, jsonify, request
 from services.playlist_manager import PlaylistManager
-from services.user_info_viewer import UserInfoViewer
+from services.spotify_operations.user_info_viewer import UserInfoViewer
 from music_chart_scraper_config import MUSIC_CHART_SCRAPER_CONFIG
 
 # Set up logging

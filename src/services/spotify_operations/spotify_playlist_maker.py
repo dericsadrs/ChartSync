@@ -1,4 +1,4 @@
-from spotify_auth import SpotifyAuth
+from services.spotify_operations.spotify_auth import SpotifyAuth
 import logging
 
 class SpotifyPlaylistMaker:
