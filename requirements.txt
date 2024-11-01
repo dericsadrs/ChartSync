@@ -1,5 +1,75 @@
-spotipy
-python-dotenv
-playwright
-openai
-flask
+# Core dependencies
+Flask==3.0.0
+spotipy==2.23.0
+python-dotenv==1.0.0
+requests==2.31.0
+gunicorn==21.2.0
+playwright==1.41.1
+openai==1.3.7
+
+# Web scraping
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Testing dependencies
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+unittest-mock==2.1.0
+coverage==7.3.2
+
+# Development dependencies
+flake8==6.1.0
+black==23.11.0
+isort==5.12.0
+mypy==1.7.1
+
+# Type checking
+types-requests==2.31.0.10
+types-beautifulsoup4==4.12.0.7
+types-python-dateutil==2.8.19.14
+
+# Debug tools
+ipython==8.17.2
+ipdb==0.13.13
+
+# Documentation
+Sphinx==7.2.6
+sphinx-rtd-theme==1.3.0# Core dependencies
+Flask==3.0.0
+spotipy==2.23.0
+python-dotenv==1.0.0
+requests==2.31.0
+gunicorn==21.2.0
+playwright==1.41.1
+openai==1.3.7
+
+# Web scraping
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Testing dependencies
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+unittest-mock==2.1.0
+coverage==7.3.2
+
+# Development dependencies
+flake8==6.1.0
+black==23.11.0
+isort==5.12.0
+mypy==1.7.1
+
+# Type checking
+types-requests==2.31.0.10
+types-beautifulsoup4==4.12.0.7
+types-python-dateutil==2.8.19.14
+
+# Debug tools
+ipython==8.17.2
+ipdb==0.13.13
+
+# Documentation
+Sphinx==7.2.6
+sphinx-rtd-theme==1.3.0
