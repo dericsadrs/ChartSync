@@ -1,72 +1,103 @@
-# app.py or any script where you want to use Config
-# from config import Config
-
-# # Example Usage
-from services.billboard_scraper import BillboardScraper
-from services.spotify_playlist_maker import SpotifyPlaylistMaker
-
-
-# if __name__ == "__main__":
-#     # Toggle headless mode by passing False to see the browser window
-#     scraper = BillboardScraper(headless=False)  # Change to True for headless mode
-
-#     # Get Hot 100 for a specific date (e.g., January 1, 2020)
-#     # hot_100_2020 = scraper.get_hot_100_by_date("2020-01-01")
-#     # scraper.display_songs(hot_100_2020)
-
-#     # Get Hot 100 for today
-#     # hot_100_today = scraper.get_latest_hot_100()
-#     # print("\nHot 100 for today:")
-#     # for song in hot_100_today:
-#     #     print(f"{song['title']} by {song['artist']}")
-
-#     # # Get the Hot 100 in JSON format for playlist creation
-#     # hot_100_json = scraper.get_hot_100_json(hot_100_today)
-#     # print("JSON Response:", hot_100_json)
-    
-#     # Create a new Spotify playlist
-#     spotify_maker = SpotifyPlaylistMaker()  # Initialize with your own credentials
-#     #spotify_maker.authenticate()  # Authenticate with Spotify
-#     print(spotify_maker.search_song(artist='Kendrick Lamar', track='Not Like Us'))
-    
-    # Setup logging
+from flask import Flask, request, jsonify
+from services.playlist_manager import PlaylistManager
+from services.gpt_operations import GPTOperations
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def main():
-    # Initialize the Billboard Scraper
-    billboard_scraper = BillboardScraper(headless=True)
+app = Flask(__name__)
 
-    # Scrape the latest Billboard Hot 100
-    logging.info("Scraping the Billboard Hot 100 chart...")
-    hot_100_songs = billboard_scraper.get_latest_hot_100()
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    # Initialize Spotify Playlist Maker
-    spotify_maker = SpotifyPlaylistMaker()
-    
-    # Get current user's Spotify ID
-    user = spotify_maker.sp.current_user()
-    user_id = user['id']
-    logging.info(f"Authenticated as Spotify user: {user['display_name']}")
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({"status": "healthy", "service": "music-playlist-service"})
 
-    # Create a Spotify playlist for the Billboard Hot 100
-    playlist_name = "Billboard Hot 100 Playlist"
-    playlist_description = "Automatically generated Billboard Hot 100 playlist."
-    playlist_id = spotify_maker.create_playlist(user_id, playlist_name, playlist_description)
+@app.route('/api/playlists/charts/<chart_type>', methods=['POST'])
+def create_chart_playlist(chart_type):
+    """Create a playlist based on chart type."""
+    try:
+        logger.info(f"[PlaylistAPI] Creating playlist for chart type: {chart_type}")
+        playlist_manager = PlaylistManager()
+        result = playlist_manager.create_playlist(chart_type=chart_type)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"[PlaylistAPI] Error creating chart playlist: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-    # Search and collect Spotify URIs for the Billboard Hot 100 songs
-    track_uris = []
-    for song in hot_100_songs:
-        uri = spotify_maker.search_song(artist=song['artist'], track=song['title'])
-        if uri:
-            track_uris.append(uri)
+@app.route('/api/playlists/gpt', methods=['POST'])
+def create_gpt_playlist():
+    """Create a playlist based on GPT recommendations."""
+    try:
+        data = request.get_json()
+        if not data or 'prompt' not in data:
+            return jsonify({"status": "error", "message": "Missing prompt in request"}), 400
 
-    # Add tracks to the playlist
-    if track_uris:
-        spotify_maker.add_tracks_to_playlist(playlist_id, track_uris)
-        logging.info(f"Successfully added {len(track_uris)} songs to the Spotify playlist.")
-    else:
-        logging.error("No songs were added to the playlist. Please check the song search functionality.")
+        prompt = data['prompt']
+        playlist_name = data.get('playlist_name', 'GPT Recommended Songs')
+        description = data.get('description', 'Playlist created from GPT recommendations')
+
+        logger.info(f"[PlaylistAPI] Creating GPT playlist with prompt: {prompt}")
+        
+        # Get song recommendations from GPT
+        gpt_ops = GPTOperations()
+        songs = gpt_ops.fetch_songs(prompt)
+        
+        if not songs.songs:
+            return jsonify({"status": "error", "message": "No songs found for the given prompt"}), 404
+            
+        # Create playlist with recommended songs
+        playlist_manager = PlaylistManager()
+        result = playlist_manager.create_playlist_from_songs(
+            songs=songs,
+            playlist_name=playlist_name,
+            description=description
+        )
+        
+        # Get usage statistics
+        usage_stats = gpt_ops.get_usage_stats()
+        
+        return jsonify({
+            "status": "success",
+            "playlist": result,
+            "songs_count": len(songs.songs),
+            "usage_stats": usage_stats
+        })
+        
+    except Exception as e:
+        logger.error(f"[PlaylistAPI] Error creating GPT playlist: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/recommendations', methods=['POST'])
+def get_gpt_recommendations():
+    """Get song recommendations without creating a playlist."""
+    try:
+        data = request.get_json()
+        if not data or 'prompt' not in data:
+            return jsonify({"status": "error", "message": "Missing prompt in request"}), 400
+
+        prompt = data['prompt']
+        logger.info(f"[PlaylistAPI] Getting GPT recommendations for prompt: {prompt}")
+        
+        gpt_ops = GPTOperations()
+        songs = gpt_ops.fetch_songs(prompt)
+        
+        if not songs.songs:
+            return jsonify({"status": "error", "message": "No songs found for the given prompt"}), 404
+            
+        # Convert songs to dictionary format
+        songs_list = [{"title": song.title, "artist": song.artist} for song in songs.songs]
+        
+        return jsonify({
+            "status": "success",
+            "songs": songs_list,
+            "count": len(songs_list)
+        })
+        
+    except Exception as e:
+        logger.error(f"[PlaylistAPI] Error getting GPT recommendations: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
