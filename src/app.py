@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from services.playlist_manager import PlaylistManager
 from services.spotify_operations.user_info_viewer import UserInfoViewer
 from music_chart_scraper_config import MUSIC_CHART_SCRAPER_CONFIG
+from services.gpt_operations import GPTOperations
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 playlist_manager = PlaylistManager()
 user_info_viewer = UserInfoViewer()
+gpt_operations = GPTOperations()
 
 def create_playlist_handler(chart_type):
     try:
@@ -48,6 +50,30 @@ def get_user_info():
     except Exception as e:
         logger.error(f"Error fetching user information: {str(e)}")
         return jsonify({"error": "Failed to fetch user information"}), 500
+    
+@app.route('/recommendations', methods=['POST'])
+def get_song_recommendations():
+    try:
+        data = request.get_json()
+        if not data or 'prompt' not in data:
+            logger.warning("Missing prompt in request body")
+            return jsonify({"error": "Missing 'prompt' in request body"}), 400
+            
+        prompt = data['prompt']
+        logger.info(f"Received recommendation request with prompt: {prompt}")
+        
+        result = gpt_operations.fetch_songs(prompt)
+        
+        if result['status'] == 'success':
+            logger.info(f"Successfully fetched {len(result['data'])} song recommendations")
+            return jsonify(result), 200
+        else:
+            logger.error(f"Error fetching recommendations: {result['message']}")
+            return jsonify({"error": result['message']}), 500
+            
+    except Exception as e:
+        logger.error(f"Error processing recommendation request: {str(e)}")
+        return jsonify({"error": "Failed to process recommendation request"}), 500
 
 @app.errorhandler(404)
 def not_found(error):
