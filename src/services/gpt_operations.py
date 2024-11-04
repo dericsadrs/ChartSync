@@ -1,51 +1,96 @@
-import openai
+from openai import OpenAI
 import json
 import logging
 from config import Config
 
 class GPTOperations:
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - [GPTOperations] - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+        
         self.config = Config()
-        self.api_key = self.config.get_gpt_key()
-        self.model = self.config.get_gpt_model()  # Assuming you add this to your Config class
-        openai.api_key = self.api_key
+        self.client = OpenAI(api_key=self.config.get_gpt_key())
+        self.model = self.config.get_gpt_model()
 
     def fetch_songs(self, prompt: str) -> dict:
         """
-        Fetch songs based on the user's prompt using the specified GPT model.
-        Returns a JSON response with the artist and song.
+        Fetch songs based on the user's prompt using the OpenAI API.
+        Returns a JSON response with an array of songs containing title and artist.
         """
         try:
-            response = openai.Completion.create(
+            self.logger.info(f"Fetching songs for prompt: {prompt}")
+            
+            # Construct a clear prompt for the model
+            formatted_prompt = f"""
+            Based on this request: "{prompt}"
+            Return a list of relevant songs in JSON format:
+            [{{"title": "Song Name", "artist": "Artist Name"}}, ...]
+            Provide exactly 5 songs that best match the request.
+            """
+            
+            response = self.client.chat.completions.create(
                 model=self.model,
-                prompt=prompt,
-                max_tokens=100,
-                n=1,
-                stop=None,
+                messages=[
+                    {"role": "system", "content": "You are a music recommendation system. Respond only with valid JSON arrays containing song information."},
+                    {"role": "user", "content": formatted_prompt}
+                ],
                 temperature=0.7
             )
-            songs = self._parse_response(response.choices[0].text)
+            
+            # Extract the response content
+            response_text = response.choices[0].message.content
+            self.logger.info("Successfully received response from OpenAI")
+            
+            # Parse the response and validate it's in the correct format
+            songs = self._parse_response(response_text)
+            self.logger.info(f"Successfully parsed {len(songs)} songs from response")
+            
             return {"status": "success", "data": songs}
+            
         except Exception as e:
-            logging.error(f"Error fetching songs: {e}")
+            self.logger.error(f"Error fetching songs: {str(e)}")
             return {"status": "error", "message": str(e)}
 
     def _parse_response(self, response_text: str) -> list:
         """
         Parse the GPT response text to extract song information.
+        Ensures the response is in the correct JSON format.
         """
-        # This is a simple example. You might need to adjust the parsing logic based on the response format.
-        lines = response_text.strip().split('\n')
-        songs = []
-        for line in lines:
-            if '-' in line:
-                artist, song = line.split('-', 1)
-                songs.append({"artist": artist.strip(), "song": song.strip()})
-        return songs
+        try:
+            # Clean the response text to ensure it's valid JSON
+            response_text = response_text.strip()
+            if not response_text.startswith('['):
+                self.logger.warning("Response text not in expected format, attempting to extract JSON array")
+                # Find the first [ and last ] in the text
+                start = response_text.find('[')
+                end = response_text.rfind(']') + 1
+                if start != -1 and end != 0:
+                    response_text = response_text[start:end]
+                else:
+                    raise ValueError("Could not find JSON array in response")
 
-# # Example usage
-# if __name__ == "__main__":
-#     gpt_operations = GPTOperations()
-#     prompt = "Give me Ed-Sheeran's top songs"
-#     result = gpt_operations.fetch_songs(prompt)
-#     print(json.dumps(result, indent=2))
+            songs = json.loads(response_text)
+            
+            # Validate each song has the required fields
+            validated_songs = []
+            for song in songs:
+                if isinstance(song, dict) and 'title' in song and 'artist' in song:
+                    validated_songs.append({
+                        'title': song['title'],
+                        'artist': song['artist']
+                    })
+                else:
+                    self.logger.warning(f"Skipping invalid song format: {song}")
+            
+            return validated_songs
+            
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Failed to parse JSON response: {str(e)}")
+            return []
+        except Exception as e:
+            self.logger.error(f"Error parsing response: {str(e)}")
+            return []
