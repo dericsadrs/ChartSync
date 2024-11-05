@@ -63,6 +63,7 @@ def get_song_recommendations():
         logger.info(f"Received recommendation request with prompt: {prompt}")
         
         result = gpt_operations.fetch_songs(prompt)
+        logger.info(f"Fetched result: {result}")  # Log the result of the fetch_songs call
         
         if result['status'] == 'success':
             logger.info(f"Successfully fetched {len(result['data'])} song recommendations")
