@@ -28,7 +28,7 @@ class GPTOperations:
             formatted_prompt = f"""
             Based on this request: "{prompt}"
             Return a list of relevant songs in JSON format:
-            [{{"title": "Song Name", "artist": "Artist Name"}}, ...]
+            [{{"song": "Song Name", "artist": "Artist Name"}}, ...]
             Provide exactly 5 songs that best match the request.
             """
             
