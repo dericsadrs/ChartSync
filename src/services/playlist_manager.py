@@ -1,4 +1,5 @@
 import logging
+from model.songs import Songs
 from services.scraper import Scraper
 from services.spotify_operations.spotify_playlist_maker import SpotifyPlaylistMaker
 from spotipy.exceptions import SpotifyException
@@ -13,27 +14,37 @@ class PlaylistManager:
         self.logger.addHandler(handler)
         self.spotify_maker = SpotifyPlaylistMaker()
 
-    def create_playlist(self, chart_type: str):
+    def create_playlist(self, chart_type: str = None, songs_data: Songs = None, playlist_name: str = None):
         """
-        Create a Spotify playlist based on the specified chart type.
+        Create a Spotify playlist based on either a chart type or provided Songs object.
 
-        :param chart_type: The type of chart to scrape (e.g., "billboard_hot_100" or "tiktok_top_50").
+        :param chart_type: The type of chart to scrape (e.g., "billboard_hot_100"), optional
+        :param songs_data: Songs object containing the songs to add, optional
+        :param playlist_name: Custom name for the playlist, optional
         :return: dict with status and message
         """
         try:
-            self.logger.info(f"Starting playlist creation for {chart_type}")
+            self.logger.info("Starting playlist creation")
             
-            # Initialize the scraper
-            scraper = Scraper(headless=True, chart_type=chart_type)
-            self.logger.info(f"Initialized scraper for {chart_type}")
+            # Get songs either from scraper or provided Songs object
+            if songs_data is None and chart_type:
+                # Initialize the scraper and get chart data
+                scraper = Scraper(headless=True, chart_type=chart_type)
+                self.logger.info(f"Initialized scraper for {chart_type}")
+                songs_data = scraper.get_latest_chart()
+                # Use chart type for playlist name if not provided
+                playlist_name = playlist_name or f"{chart_type.replace('_', ' ').title()} Playlist"
+            elif songs_data is not None:
+                # Use provided Songs object
+                playlist_name = playlist_name or "Custom Generated Playlist"
+            else:
+                raise ValueError("Either chart_type or songs_data must be provided")
 
-            # Fetch the latest chart data
-            songs_data = scraper.get_latest_chart()
             if not songs_data.songs:
-                self.logger.error(f"No songs found in the {chart_type.replace('_', ' ').title()}.")
-                return {"status": "error", "message": "No songs found in the chart."}
+                self.logger.error("No songs found.")
+                return {"status": "error", "message": "No songs found."}
 
-            self.logger.info(f"Successfully fetched {len(songs_data.songs)} songs from {chart_type}")
+            self.logger.info(f"Processing {len(songs_data.songs)} songs")
 
             # Get current user's Spotify ID
             try:
@@ -45,8 +56,7 @@ class PlaylistManager:
                 return {"status": "error", "message": "Failed to authenticate Spotify user."}
 
             # Create a Spotify playlist
-            playlist_name = f"{chart_type.replace('_', ' ').title()} Playlist"
-            playlist_description = f"Automatically generated {chart_type.replace('_', ' ').title()} playlist."
+            playlist_description = f"Automatically generated playlist: {playlist_name}"
             try:
                 playlist_id = self.spotify_maker.create_playlist(user_id, playlist_name, playlist_description)
                 self.logger.info(f"Created playlist '{playlist_name}' with ID {playlist_id}")
