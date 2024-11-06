@@ -51,31 +51,31 @@ def get_user_info():
         logger.error(f"Error fetching user information: {str(e)}")
         return jsonify({"error": "Failed to fetch user information"}), 500
     
-@app.route('/recommendations', methods=['POST'])
-def get_song_recommendations():
+@app.route('/create/playlist/gpt', methods=['POST'])
+def create_gpt_playlist():
     try:
-        data = request.get_json()
-        if not data or 'prompt' not in data:
-            logger.warning("Missing prompt in request body")
-            return jsonify({"error": "Missing 'prompt' in request body"}), 400
-            
-        prompt = data['prompt']
-        logger.info(f"Received recommendation request with prompt: {prompt}")
+        prompt = request.json.get('prompt')
+        playlist_name = request.json.get('playlist_name')  # Optional
         
-        result = gpt_operations.fetch_songs(prompt)
-        logger.info(f"Fetched result: {result}")  # Log the result of the fetch_songs call
-        
-        if result['status'] == 'success':
-            logger.info(f"Successfully fetched {len(result['data'])} song recommendations")
-            return jsonify(result), 200
-        else:
-            logger.error(f"Error fetching recommendations: {result['message']}")
-            return jsonify({"error": result['message']}), 500
-            
-    except Exception as e:
-        logger.error(f"Error processing recommendation request: {str(e)}")
-        return jsonify({"error": "Failed to process recommendation request"}), 500
+        if not prompt:
+            return jsonify({"error": "No prompt provided"}), 400
 
+        # Get songs from GPT
+        gpt_ops = GPTOperations()
+        songs_data = gpt_ops.fetch_songs(prompt)
+        
+        # Create playlist using the songs
+        result = playlist_manager.create_playlist(
+            songs_data=songs_data,
+            playlist_name=playlist_name
+        )
+        
+        return jsonify(result), 201 if result['status'] == 'success' else 500
+        
+    except Exception as e:
+        logger.error(f"Error creating GPT playlist: {str(e)}")
+        return jsonify({"error": "Failed to create playlist"}), 500
+    
 @app.errorhandler(404)
 def not_found(error):
     logger.warning(f"404 error: {request.url}")
