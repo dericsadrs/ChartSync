@@ -2,6 +2,8 @@ from openai import OpenAI
 import json
 import logging
 from config import Config
+from model.song import Song
+from model.songs import Songs
 
 class GPTOperations:
     def __init__(self):
@@ -16,19 +18,18 @@ class GPTOperations:
         self.client = OpenAI(api_key=self.config.get_gpt_key())
         self.model = self.config.get_gpt_model()
 
-    def fetch_songs(self, prompt: str) -> dict:
+    def fetch_songs(self, prompt: str) -> Songs:
         """
         Fetch songs based on the user's prompt using the OpenAI API.
-        Returns a JSON response with an array of songs containing title and artist.
+        Returns a Songs object containing Song objects with title and artist information.
         """
         try:
             self.logger.info(f"Fetching songs for prompt: {prompt}")
             
-            # Construct a clear prompt for the model
             formatted_prompt = f"""
             Based on this request: "{prompt}"
             Return a list of relevant songs in JSON format:
-            [{{"song": "Song Name", "artist": "Artist Name"}}, ...]
+            [{{"title": "Song Name", "artist": "Artist Name"}}, ...]
             Provide exactly 5 songs that best match the request.
             """
             
@@ -41,19 +42,18 @@ class GPTOperations:
                 temperature=0.7
             )
             
-            # Extract the response content
             response_text = response.choices[0].message.content
             self.logger.info("Successfully received response from OpenAI")
             
-            # Parse the response and validate it's in the correct format
-            songs = self._parse_response(response_text)
-            self.logger.info(f"Successfully parsed {len(songs)} songs from response")
+            song_list = self._parse_response(response_text)
+            songs_obj = Songs([Song(title=song['title'], artist=song['artist']) for song in song_list])
+            self.logger.info(f"Successfully created Songs object with {len(song_list)} songs")
             
-            return {"status": "success", "data": songs}
+            return songs_obj
             
         except Exception as e:
             self.logger.error(f"Error fetching songs: {str(e)}")
-            return {"status": "error", "message": str(e)}
+            return Songs([])  # Return empty Songs object in case of error
 
     def _parse_response(self, response_text: str) -> list:
         """
@@ -61,11 +61,9 @@ class GPTOperations:
         Ensures the response is in the correct JSON format.
         """
         try:
-            # Clean the response text to ensure it's valid JSON
             response_text = response_text.strip()
             if not response_text.startswith('['):
                 self.logger.warning("Response text not in expected format, attempting to extract JSON array")
-                # Find the first [ and last ] in the text
                 start = response_text.find('[')
                 end = response_text.rfind(']') + 1
                 if start != -1 and end != 0:
@@ -75,7 +73,6 @@ class GPTOperations:
 
             songs = json.loads(response_text)
             
-            # Validate each song has the required fields
             validated_songs = []
             for song in songs:
                 if isinstance(song, dict) and 'title' in song and 'artist' in song:
