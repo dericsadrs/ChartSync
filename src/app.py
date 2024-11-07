@@ -5,8 +5,8 @@ from services.spotify_operations.user_info_viewer import UserInfoViewer
 from music_chart_scraper_config import MUSIC_CHART_SCRAPER_CONFIG
 from services.gpt_operations import GPTOperations
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Set up logging with a prefix
+logging.basicConfig(level=logging.INFO, format='[App] %(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
