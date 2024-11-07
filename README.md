@@ -169,5 +169,5 @@ print(result)
 ```
 
 ## Sample Run
+![Screenshot 2024-11-06 at 11 08 18 PM](https://github.com/user-attachments/assets/5173a5c8-b602-4654-b1c6-37c90b797aa6)
 
-[Leave blank for now]
