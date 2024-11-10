@@ -292,9 +292,16 @@ make test-report
 ```
 
 ## Sample Runs
+<img width="1101" alt="Screenshot 2024-11-10 at 8 47 39 PM" src="https://github.com/user-attachments/assets/67c199ac-9b8d-4582-b6df-eb58060b6da4">
+<img width="1098" alt="Screenshot 2024-11-10 at 8 48 04 PM" src="https://github.com/user-attachments/assets/b7064b0e-644b-4588-b5b7-e779669c21e6">
+<img width="1067" alt="Screenshot 2024-11-08 at 12 45 42 AM" src="https://github.com/user-attachments/assets/43cc7a81-e67f-4f78-8312-48325fa1346b">
+<img width="1026" alt="Screenshot 2024-11-10 at 8 47 14 PM" src="https://github.com/user-attachments/assets/e6b1df87-e052-470f-8041-5676b2c7d26c">
+<img width="590" alt="Screenshot 2024-11-10 at 8 48 18 PM" src="https://github.com/user-attachments/assets/8bf0f647-a618-4c02-9061-cff4858a137b">
+<img width="585" alt="Screenshot 2024-11-10 at 8 48 46 PM" src="https://github.com/user-attachments/assets/20be7adf-3f3f-478a-a74a-54929f0277ff">
 
-### Creating Billboard Hot 100 Playlist
-![Screenshot 2024-11-06 at 11 08 18 PM](https://github.com/user-attachments/assets/5173a5c8-b602-4654-b1c6-37c90b797aa6)
+
+
+
 
 ### Testing Coverage Report
 ```plaintext
