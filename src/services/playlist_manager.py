@@ -14,7 +14,9 @@ class PlaylistManager:
         self.logger.addHandler(handler)
         self.spotify_maker = SpotifyPlaylistMaker()
 
-    def create_playlist(self, chart_type: str = None, songs_data: Songs = None, playlist_name: str = None):
+    def create_playlist(self, chart_type: str = None, songs_data: Songs = None, 
+                   playlist_name: str = None, public: bool = True, 
+                   cover_image_path: str = None):
         """
         Create a Spotify playlist based on either a chart type or provided Songs object.
 
@@ -58,7 +60,13 @@ class PlaylistManager:
             # Create a Spotify playlist
             playlist_description = f"Automatically generated playlist: {playlist_name}"
             try:
-                playlist_id = self.spotify_maker.create_playlist(user_id, playlist_name, playlist_description)
+                playlist_id = self.spotify_maker.create_playlist(
+                user_id=user_id,
+                playlist_name=playlist_name,
+                description=playlist_description,
+                public=public,
+                cover_image_path=cover_image_path
+            )
                 self.logger.info(f"Created playlist '{playlist_name}' with ID {playlist_id}")
             except SpotifyException as e:
                 self.logger.error(f"Failed to create playlist: {str(e)}")
