@@ -76,6 +76,15 @@ def create_gpt_playlist():
         logger.error(f"Error creating GPT playlist: {str(e)}")
         return jsonify({"error": "Failed to create playlist"}), 500
     
+@app.route('/playlist/<playlist_id>/insights', methods=['GET'])
+def get_playlist_insights(playlist_id):
+    try:
+        insights = playlist_manager.get_collaborator_insights(playlist_id)
+        return jsonify(insights), 200
+    except Exception as e:
+        logger.error(f"Error fetching playlist insights: {str(e)}")
+        return jsonify({"error": "Failed to fetch playlist insights"}), 500
+
 @app.errorhandler(404)
 def not_found(error):
     logger.warning(f"404 error: {request.url}")

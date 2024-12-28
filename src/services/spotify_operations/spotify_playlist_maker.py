@@ -152,3 +152,34 @@ class SpotifyPlaylistMaker:
         except Exception as e:
             self.logger.error(f"Failed to update playlist {playlist_id}: {str(e)}")
             raise
+    def get_playlist_details(self, playlist_id: str) -> dict:
+        """
+        Fetch details of a Spotify playlist, including tracks and their contributors.
+        """
+        try:
+            self.auth.refresh_token_if_expired()
+            playlist = self.sp.playlist(playlist_id)
+            
+            collaborators = []
+            songs = []
+            
+            for item in playlist['tracks']['items']:
+                track = item['track']
+                added_by = item['added_by']['id'] if 'added_by' in item and item['added_by'] else "unknown"
+                songs.append({
+                    "title": track['name'],
+                    "artist": ", ".join([artist['name'] for artist in track['artists']]),
+                    "added_by": added_by
+                })
+                if added_by not in collaborators:
+                    collaborators.append(added_by)
+
+            return {
+                "name": playlist['name'],
+                "description": playlist['description'],
+                "collaborators": collaborators,
+                "songs": songs
+            }
+        except Exception as e:
+            self.logger.error(f"Failed to fetch playlist details: {str(e)}")
+            raise

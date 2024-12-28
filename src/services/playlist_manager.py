@@ -100,3 +100,26 @@ class PlaylistManager:
         except Exception as e:
             self.logger.error(f"An unexpected error occurred: {str(e)}")
             return {"status": "error", "message": "An unexpected error occurred while creating the playlist."}
+    
+    def get_collaborator_insights(self, playlist_id: str):
+        """
+        Analyze collaborator contributions for a playlist.
+        """
+        try:
+            playlist_details = self.spotify_maker.get_playlist_details(playlist_id)
+            collaborator_stats = {}
+
+            for song in playlist_details['songs']:
+                contributor = song['added_by']
+                if contributor not in collaborator_stats:
+                    collaborator_stats[contributor] = {"songs_added": 0}
+                collaborator_stats[contributor]["songs_added"] += 1
+
+            return {
+                "playlist_name": playlist_details["name"],
+                "description": playlist_details["description"],
+                "collaborator_stats": collaborator_stats
+            }
+        except Exception as e:
+            self.logger.error(f"Error analyzing playlist: {str(e)}")
+            return {"error": "Failed to analyze playlist"}
