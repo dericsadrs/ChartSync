@@ -1,5 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
+from model.song import Song
+from services import playlist_manager
 from services.playlist_manager import PlaylistManager
 
 class TestPlaylistManager:
@@ -50,4 +52,29 @@ class TestPlaylistManager:
             
             result = playlist_manager.create_playlist("billboard_hot_100")
             assert result["status"] == "error"
-            assert "error occurred" in result["message"].lower()
+            assert "error occurred" in result["message"].lower()    
+    def test_get_collaborator_insights(mock_spotify_client):
+        playlist_id = "test_playlist_id"
+        mock_spotify_client.get_playlist_details.return_value = {
+            "name": "Test Playlist",
+            "description": "A test playlist",
+            "songs": [
+                {"title": "Song 1", "artist": "Artist 1", "added_by": "user1"},
+                {"title": "Song 2", "artist": "Artist 2", "added_by": "user2"},
+                {"title": "Song 3", "artist": "Artist 1", "added_by": "user1"}
+            ]
+        }
+        
+        insights = playlist_manager.get_collaborator_insights(playlist_id)
+        assert insights['collaborator_stats']['user1']['songs_added'] == 2
+        assert insights['collaborator_stats']['user2']['songs_added'] == 1
+
+    def test_create_mood_or_activity_playlist(mock_spotify_client, mock_openai_client):
+        mock_openai_client.fetch_songs_by_mood_or_activity.return_value = Songs([
+            Song("Song 1", "Artist 1"),
+            Song("Song 2", "Artist 2")
+        ])
+        
+        result = playlist_manager.create_mood_or_activity_playlist("Relaxation")
+        assert result["status"] == "success"
+        assert "Playlist 'Relaxation Playlist' created" in result["message"]
