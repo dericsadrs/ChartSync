@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from model.song import Song
+from services import playlist_manager
 from services.playlist_manager import PlaylistManager
 
 class TestPlaylistManager:
