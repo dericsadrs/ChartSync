@@ -24,6 +24,7 @@ PIP := pip
 PROJECT_ROOT := $(shell pwd)
 SRC_DIR := $(PROJECT_ROOT)/src
 TESTS_DIR := $(PROJECT_ROOT)/tests
+PYTHONPATH := $(PROJECT_ROOT)
 FLASK_APP := $(SRC_DIR)/app.py
 
 # Test-related variables
@@ -32,7 +33,7 @@ COVERAGE := coverage
 TEST_ARGS := -v --color=yes
 
 # Phony targets
-.PHONY: all setup run clean test lint test-all test-models test-services test-coverage test-report
+.PHONY: all setup run clean test lint test-all test-models test-services test-coverage test-report update-deps
 
 # Default target
 all: setup run
@@ -81,51 +82,48 @@ clean:
 test-all:
 	@echo "Running all tests..."
 ifeq ($(DETECTED_OS),Windows)
-	@call $(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR) $(TEST_ARGS)
+	@call $(VENV_ACTIVATE) && set PYTHONPATH=$(PYTHONPATH) && $(PYTEST) $(TESTS_DIR) $(TEST_ARGS)
 else
-	@$(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR) $(TEST_ARGS)
+	@$(VENV_ACTIVATE) && PYTHONPATH=$(PYTHONPATH) $(PYTEST) $(TESTS_DIR) $(TEST_ARGS)
 endif
 
 # Run only model tests
 test-models:
 	@echo "Running model tests..."
 ifeq ($(DETECTED_OS),Windows)
-	@call $(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR)/test_models $(TEST_ARGS)
+	@call $(VENV_ACTIVATE) && set PYTHONPATH=$(PYTHONPATH) && $(PYTEST) $(TESTS_DIR)/test_models $(TEST_ARGS)
 else
-	@$(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR)/test_models $(TEST_ARGS)
+	@$(VENV_ACTIVATE) && PYTHONPATH=$(PYTHONPATH) $(PYTEST) $(TESTS_DIR)/test_models $(TEST_ARGS)
 endif
 
 # Run only service tests
 test-services:
 	@echo "Running service tests..."
 ifeq ($(DETECTED_OS),Windows)
-	@call $(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR)/test_services $(TEST_ARGS)
+	@call $(VENV_ACTIVATE) && set PYTHONPATH=$(PYTHONPATH) && $(PYTEST) $(TESTS_DIR)/test_services $(TEST_ARGS)
 else
-	@$(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR)/test_services $(TEST_ARGS)
+	@$(VENV_ACTIVATE) && PYTHONPATH=$(PROJECT_ROOT)/src:$(PYTHONPATH) $(PYTEST) $(TESTS_DIR)/test_services $(TEST_ARGS)
 endif
 
 # Run tests with coverage
 test-coverage:
 	@echo "Running tests with coverage..."
 ifeq ($(DETECTED_OS),Windows)
-	@call $(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term-missing $(TEST_ARGS)
+	@call $(VENV_ACTIVATE) && set PYTHONPATH=$(PYTHONPATH) && $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term-missing $(TEST_ARGS)
 else
-	@$(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term-missing $(TEST_ARGS)
+	@$(VENV_ACTIVATE) && PYTHONPATH=$(PYTHONPATH) $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term-missing $(TEST_ARGS)
 endif
 
 # Generate HTML coverage report
 test-report:
 	@echo "Generating HTML coverage report..."
 ifeq ($(DETECTED_OS),Windows)
-	@call $(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=html $(TEST_ARGS)
+	@call $(VENV_ACTIVATE) && set PYTHONPATH=$(PYTHONPATH) && $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=html $(TEST_ARGS)
 	@echo "Coverage report generated in htmlcov/index.html"
 else
-	@$(VENV_ACTIVATE) && $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=html $(TEST_ARGS)
+	@$(VENV_ACTIVATE) && PYTHONPATH=$(PYTHONPATH) $(PYTEST) $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=html $(TEST_ARGS)
 	@echo "Coverage report generated in htmlcov/index.html"
 endif
-
-# Quick test (alias for test-all)
-test: test-all
 
 # Run linter
 lint:
@@ -144,3 +142,12 @@ ifeq ($(DETECTED_OS),Windows)
 else
 	@$(VENV_ACTIVATE) && $(PIP) install -U -r requirements.txt && $(PIP) freeze > requirements.txt
 endif
+
+# Logging function
+log:
+	@echo "Current working directory: $(PROJECT_ROOT)"
+	@echo "Detected OS: $(DETECTED_OS)"
+	@echo "Python executable: $(PYTHON)"
+	@echo "Virtual environment: $(VENV_NAME)"
+	@echo "Source directory: $(SRC_DIR)"
+	@echo "Tests directory: $(TESTS_DIR)"
