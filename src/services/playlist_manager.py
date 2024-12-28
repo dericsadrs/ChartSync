@@ -123,3 +123,52 @@ class PlaylistManager:
         except Exception as e:
             self.logger.error(f"Error analyzing playlist: {str(e)}")
             return {"error": "Failed to analyze playlist"}
+    
+    def create_mood_or_activity_playlist(self, mood_or_activity: str, playlist_name: str = None, public: bool = True):
+        """
+        Create a playlist for a specific mood or activity.
+        Args:
+            mood_or_activity (str): Mood or activity (e.g., "Workout", "Relaxation").
+            playlist_name (str): Optional custom playlist name.
+            public (bool): Whether the playlist is public.
+        Returns:
+            dict: Status and message of the operation.
+        """
+        try:
+            self.logger.info(f"Creating playlist for mood/activity: {mood_or_activity}")
+            
+            # Fetch songs from GPT
+            gpt_operations = GPTOperations()
+            songs = gpt_operations.fetch_songs_by_mood_or_activity(mood_or_activity)
+            
+            if not songs.songs:
+                return {"status": "error", "message": "No songs generated for the selected mood or activity."}
+
+            # Generate playlist name if not provided
+            playlist_name = playlist_name or f"{mood_or_activity.title()} Playlist"
+
+            # Create the playlist
+            user = self.spotify_maker.sp.current_user()
+            playlist_id = self.spotify_maker.create_playlist(
+                user_id=user['id'],
+                playlist_name=playlist_name,
+                description=f"A playlist tailored for {mood_or_activity}.",
+                public=public
+            )
+            
+            # Add songs to the playlist
+            track_uris = []
+            for song in songs.songs:
+                uri = self.spotify_maker.search_song(artist=song.artist, track=song.title)
+                if uri:
+                    track_uris.append(uri)
+
+            if track_uris:
+                self.spotify_maker.add_tracks_to_playlist(playlist_id, track_uris)
+                self.logger.info(f"Successfully created {playlist_name} with {len(track_uris)} songs.")
+                return {"status": "success", "message": f"Playlist '{playlist_name}' created with {len(track_uris)} songs."}
+            else:
+                return {"status": "error", "message": "No tracks found on Spotify for the generated songs."}
+        except Exception as e:
+            self.logger.error(f"Failed to create mood/activity playlist: {str(e)}")
+            return {"status": "error", "message": "An error occurred while creating the playlist."}

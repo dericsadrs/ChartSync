@@ -91,3 +91,38 @@ class GPTOperations:
         except Exception as e:
             self.logger.error(f"Error parsing response: {str(e)}")
             return []
+    def fetch_songs_by_mood_or_activity(self, mood_or_activity: str) -> Songs:
+        """
+        Fetch songs for a specific mood or activity using GPT.
+        Args:
+            mood_or_activity (str): The mood or activity (e.g., "Workout", "Relaxation").
+        Returns:
+            Songs: A Songs object containing Song instances.
+        """
+        try:
+            self.logger.info(f"Fetching songs for mood/activity: {mood_or_activity}")
+            
+            prompt = f"""
+            Suggest 10 songs that fit the mood or activity: '{mood_or_activity}'.
+            Return the results in JSON format:
+            [{{"title": "Song Name", "artist": "Artist Name"}}, ...]
+            Ensure the songs are diverse and suitable for this context.
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a music recommendation engine."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7
+            )
+            
+            response_text = response.choices[0].message.content
+            self.logger.info("Received response from GPT.")
+            
+            song_list = self._parse_response(response_text)
+            return Songs([Song(title=s['title'], artist=s['artist']) for s in song_list])
+        except Exception as e:
+            self.logger.error(f"Error fetching songs for mood/activity: {str(e)}")
+            return Songs([])

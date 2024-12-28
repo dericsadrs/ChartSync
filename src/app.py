@@ -85,6 +85,25 @@ def get_playlist_insights(playlist_id):
         logger.error(f"Error fetching playlist insights: {str(e)}")
         return jsonify({"error": "Failed to fetch playlist insights"}), 500
 
+@app.route('/create/playlist/mood_activity', methods=['POST'])
+def create_mood_or_activity_playlist():
+    try:
+        data = request.json
+        mood_or_activity = data.get('mood_or_activity')
+        playlist_name = data.get('playlist_name', None)
+        
+        if not mood_or_activity:
+            return jsonify({"error": "Mood or activity not specified."}), 400
+        
+        result = playlist_manager.create_mood_or_activity_playlist(
+            mood_or_activity=mood_or_activity,
+            playlist_name=playlist_name
+        )
+        return jsonify(result), 201 if result['status'] == 'success' else 500
+    except Exception as e:
+        logger.error(f"Error creating mood/activity playlist: {str(e)}")
+        return jsonify({"error": "Failed to create playlist."}), 500
+
 @app.errorhandler(404)
 def not_found(error):
     logger.warning(f"404 error: {request.url}")
