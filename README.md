@@ -1,4 +1,4 @@
-# Music Chart Playlist Creator
+# ChartSync
 
 This project is a Python application that scrapes music charts and creates Spotify playlists based on the scraped data.
 
